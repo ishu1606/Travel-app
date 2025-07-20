@@ -177,7 +177,7 @@ export const deleteTravelStory = async (req , res , next) => {
      }
 }
 
-export const updateIsFavourite =  async (req , res , async) => {
+export const updateIsFavourite =  async (req , res , next) => {
     const {id} = req.params
     const {isFavorite} = req.body
     const userId = req.user.id 
@@ -194,6 +194,33 @@ export const updateIsFavourite =  async (req , res , async) => {
         await travelStory.save()
 
         res.status(200).json({story : travelStory , message : "Updated Successfully"})
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const searchTravelStory = async (req , res , next) => {
+    const {query} = req.query
+    const userId = req.user.id
+
+    if(!query){
+        return next(errorHandler(404 , "Query is required!"))
+    }
+
+    try {
+        const searchResults = await TravelStory.find({
+            userId: userId,
+            $or : [
+                {title : {$regex: query , $options : "i"}},
+                {story : {$regex: query , $options : "i"}},
+                {visitedLocation : {$regex: query , $options : "i"}}
+
+            ]
+        }).sort({isFavorite: -1})
+
+        res.status(200).json({
+            stories : searchResults,
+        })
     } catch (error) {
         next(error)
     }
