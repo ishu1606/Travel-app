@@ -171,9 +171,30 @@ export const deleteTravelStory = async (req , res , next) => {
 
         // Delete the file
         await fs.promises.unlink(filePath)
-
         res.status(200).json({message : "Travel story deleted successfully"})
      } catch (error) {
         next(error)
      }
+}
+
+export const updateIsFavourite =  async (req , res , async) => {
+    const {id} = req.params
+    const {isFavorite} = req.body
+    const userId = req.user.id 
+
+    try {
+        const travelStory = await TravelStory.findOne({ _id : id , userId : userId})
+
+        if(!travelStory){
+            return next(errorHandler(404 , "Travel story not found"))
+        }
+
+        travelStory.isFavorite = isFavorite
+
+        await travelStory.save()
+
+        res.status(200).json({story : travelStory , message : "Updated Successfully"})
+    } catch (error) {
+        next(error)
+    }
 }
