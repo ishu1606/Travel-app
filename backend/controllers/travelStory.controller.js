@@ -206,7 +206,6 @@ export const searchTravelStory = async (req , res , next) => {
     if(!query){
         return next(errorHandler(404 , "Query is required!"))
     }
-
     try {
         const searchResults = await TravelStory.find({
             userId: userId,
@@ -221,6 +220,25 @@ export const searchTravelStory = async (req , res , next) => {
         res.status(200).json({
             stories : searchResults,
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const filterTravelStory = async (req , res , next) => {
+    const {startDate , endDate} = req.query
+    const userId = req.user.id
+
+    try {
+        const start = new Date(parseInt(startDate))
+        const end = new Date(parseInt(endDate))
+
+        const filteredStories = await TravelStory.find({
+            userId : userId,
+            visitedDate: {$gte: start , $lte : end}
+        }).sort({isFavorite : -1})
+
+        res.status(200).json({stories : filteredStories})
     } catch (error) {
         next(error)
     }
