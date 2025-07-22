@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import PasswordInput from '../../components/PasswordInput.jsx'
 import { useNavigate } from 'react-router-dom';
+import { validateEmail } from '../../utils/helper.js';
+import axiosInstance from '../../utils/axiosInstance.js';
 
 const Login = () => {
   const navigate = useNavigate()
@@ -9,8 +11,42 @@ const Login = () => {
   const[error , setError] = useState("")
 
   const handleSubmit = async (e) => {
+    e.preventDefault()
 
+    if(!validateEmail(email)){
+      setError("Please enter a valid email address")
+      return
+    }
+
+    if(!password) {
+      setError("Password cannot be empty")
+      return
+    }
+
+    setError(null)
+
+    // Login API call 
+    try {
+      const response = await axiosInstance.post("/auth/signin", {
+        email,
+        password
+      })
+
+      if(response.data) {
+        navigate("/")
+      } 
+      // else {dispatch(signInFailure("An Unexpected error occurred"))}    
+    } catch (error) {
+      // dispatch(signInFailure("An Unexpected error occurred"))
+      if(error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message)
+      
+    } else{
+      setError("Something went wrong, please try again later")
+    }
   }
+  }
+
   return (
     <div className='h-screen bg-cyan-50 overflow-hidden relative '>
       <div className='login-ui-box right-10 -top-40' />
@@ -32,6 +68,8 @@ const Login = () => {
               <input type="email" placeholder='Email' className='input-box' value={email} onChange={(e)=> setEmail(e.target.value)}/>
 
               <PasswordInput value={password} onChange={(e)=> {setPassword(e.target.value)}} />
+
+              <p className='text-red-500 text-sm pb-1'>{error}</p>
 
               <button type='submit' className='btn-primary '>LOGIN</button>
 
